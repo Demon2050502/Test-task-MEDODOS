@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Сервис задач</title>
+  <link rel="stylesheet" href="/ui/app.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Медицинский трекер задач</p>
+        <h1>Панель управления задачами</h1>
+        <p class="hero-text">
+          Обычные и периодические задачи, экстренная очередь и быстрые действия в одном окне.
+        </p>
+      </div>
+      <div class="hero-card">
+        <div class="metric">
+          <span class="metric-label">Экстренная очередь</span>
+          <strong id="urgent-count">0</strong>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Обычная очередь</span>
+          <strong id="regular-count">0</strong>
+        </div>
+        <button class="ghost-button" id="refresh-button" type="button">Обновить данные</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel panel-form">
+        <div class="panel-header">
+          <h2>Новая задача</h2>
+          <p>Экстренная задача сразу попадает в отдельную очередь и начинает выполняться.</p>
+        </div>
+        <form id="task-form" class="stack">
+          <label>
+            <span>Название</span>
+            <input name="title" type="text" placeholder="Например, срочно связаться с пациентом" required>
+          </label>
+          <label>
+            <span>Описание</span>
+            <textarea name="description" rows="3" placeholder="Короткое пояснение"></textarea>
+          </label>
+          <div class="grid two">
+            <label>
+              <span>Приоритет</span>
+              <select name="priority">
+                <option value="normal">Обычный</option>
+                <option value="urgent">Экстренный</option>
+              </select>
+            </label>
+            <label>
+              <span>Статус</span>
+              <select name="status">
+                <option value="">По умолчанию</option>
+                <option value="new">Новая</option>
+                <option value="in_progress">В работе</option>
+                <option value="done">Выполнена</option>
+              </select>
+            </label>
+          </div>
+          <button class="primary-button" type="submit">Создать задачу</button>
+        </form>
+      </section>
+
+      <section class="panel panel-form">
+        <div class="panel-header">
+          <h2>Новая периодическая задача</h2>
+          <p>Шаблон автоматически создает обычные задачи по выбранному правилу.</p>
+        </div>
+        <form id="recurring-form" class="stack">
+          <label>
+            <span>Название</span>
+            <input name="title" type="text" placeholder="Например, утренний обход" required>
+          </label>
+          <label>
+            <span>Описание</span>
+            <textarea name="description" rows="3" placeholder="Короткое пояснение"></textarea>
+          </label>
+          <div class="grid two">
+            <label>
+              <span>Приоритет</span>
+              <select name="priority">
+                <option value="normal">Обычный</option>
+                <option value="urgent">Экстренный</option>
+              </select>
+            </label>
+            <label>
+              <span>Тип периодичности</span>
+              <select name="type" id="recurrence-type">
+                <option value="daily">Каждый n-й день</option>
+                <option value="monthly">Число месяца</option>
+                <option value="specific_dates">Конкретные даты</option>
+                <option value="day_parity">Четные/нечетные дни</option>
+              </select>
+            </label>
+          </div>
+          <div class="grid two">
+            <label>
+              <span>Дата старта</span>
+              <input name="start_date" type="date" required>
+            </label>
+            <label data-field="every_n_days">
+              <span>Интервал в днях</span>
+              <input name="every_n_days" type="number" min="1" value="1">
+            </label>
+            <label class="hidden" data-field="day_of_month">
+              <span>День месяца</span>
+              <input name="day_of_month" type="number" min="1" max="30" value="1">
+            </label>
+            <label class="hidden" data-field="parity">
+              <span>Четность</span>
+              <select name="parity">
+                <option value="odd">Нечетные дни</option>
+                <option value="even">Четные дни</option>
+              </select>
+            </label>
+          </div>
+          <div class="hidden date-picker-group" data-field="dates">
+            <div class="field-heading">
+              <span>Конкретные даты</span>
+              <button id="add-date-button" class="mini-button" type="button">Добавить дату</button>
+            </div>
+            <div id="specific-dates-list" class="date-list"></div>
+            <p class="field-hint">Выбирай даты через календарик или вводи вручную, формат подставится автоматически.</p>
+          </div>
+          <button class="primary-button" type="submit">Создать шаблон</button>
+        </form>
+      </section>
+    </main>
+
+    <section class="queues">
+      <article class="panel queue-panel urgent-panel">
+        <div class="panel-header compact">
+          <h2>Экстренная очередь</h2>
+          <p>Задачи, которые нужно брать в работу сразу.</p>
+        </div>
+        <div id="urgent-queue" class="card-list"></div>
+      </article>
+
+      <article class="panel queue-panel">
+        <div class="panel-header compact">
+          <h2>Обычная очередь</h2>
+          <p>Плановые и несрочные задачи.</p>
+        </div>
+        <div id="regular-queue" class="card-list"></div>
+      </article>
+    </section>
+
+    <section class="panel recurring-panel">
+      <div class="panel-header compact">
+        <h2>Периодические задачи</h2>
+        <p>Активные шаблоны, из которых создаются обычные задачи.</p>
+      </div>
+      <div id="recurring-list" class="card-list recurring-list"></div>
+    </section>
+
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  </div>
+
+  <script src="/ui/app.js" defer></script>
+</body>
+</html>

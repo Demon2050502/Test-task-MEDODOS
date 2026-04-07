@@ -15,6 +15,7 @@ import (
 	transporthttp "example.com/taskservice/internal/transport/http"
 	swaggerdocs "example.com/taskservice/internal/transport/http/docs"
 	httphandlers "example.com/taskservice/internal/transport/http/handlers"
+	transportui "example.com/taskservice/internal/transport/http/ui"
 	recurringtaskusecase "example.com/taskservice/internal/usecase/recurringtask"
 	"example.com/taskservice/internal/usecase/task"
 )
@@ -43,7 +44,8 @@ func main() {
 	taskHandler := httphandlers.NewTaskHandler(taskUsecase)
 	recurringTaskHandler := httphandlers.NewRecurringTaskHandler(recurringTaskUsecase)
 	docsHandler := swaggerdocs.NewHandler()
-	router := transporthttp.NewRouter(taskHandler, recurringTaskHandler, docsHandler)
+	uiHandler := transportui.NewHandler()
+	router := transporthttp.NewRouter(taskHandler, recurringTaskHandler, docsHandler, uiHandler)
 
 	if err := recurringTaskUsecase.RunOnce(ctx); err != nil {
 		logger.Error("generate recurring tasks on startup", "error", err)

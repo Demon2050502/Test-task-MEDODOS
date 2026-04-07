@@ -7,15 +7,19 @@ import (
 
 	swaggerdocs "example.com/taskservice/internal/transport/http/docs"
 	httphandlers "example.com/taskservice/internal/transport/http/handlers"
+	transportui "example.com/taskservice/internal/transport/http/ui"
 )
 
 func NewRouter(
 	taskHandler *httphandlers.TaskHandler,
 	recurringTaskHandler *httphandlers.RecurringTaskHandler,
 	docsHandler *swaggerdocs.Handler,
+	uiHandler *transportui.Handler,
 ) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 
+	router.HandleFunc("/", uiHandler.ServeIndex).Methods(http.MethodGet)
+	router.HandleFunc("/ui/{path:.*}", uiHandler.ServeAssets).Methods(http.MethodGet)
 	router.HandleFunc("/swagger/openapi.json", docsHandler.ServeSpec).Methods(http.MethodGet)
 	router.HandleFunc("/swagger/", docsHandler.ServeUI).Methods(http.MethodGet)
 	router.HandleFunc("/swagger", docsHandler.RedirectToUI).Methods(http.MethodGet)
